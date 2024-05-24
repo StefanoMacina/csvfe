@@ -1,0 +1,300 @@
+<div class="toprow">
+  <p-button
+    icon="pi pi-cloud-download"
+    [rounded]="true"
+    title="Sincronizza dati"
+    (click)="syncData()"
+    [disabled]="loadingUi"
+  />
+  <p class="head-label">Risultati produzione</p>
+</div>
+<p-toast styleClass="custom-toast" />
+
+<div class="panel">
+  <div class="filters-row">
+    <p-button
+      label="Aggiorna"
+      [outlined]="true"
+      [icon]="loadingUi ? 'pi pi-spin pi-sync' : 'pi pi-refresh'"
+      (click)="refreshData()"
+      severity="primary"
+      class="filter-button refresh"
+      [disabled]="loadingUi"
+    />
+
+    <div class="filterbar-divider"></div>
+
+    <p-iconField
+      iconPosition="left"
+      id="searchField"
+    >
+      <p-inputIcon styleClass="pi pi-search" />
+      <input
+        pInputText
+        #searchGlobal
+        type="text"
+        (keyup)="tableRecords.filterGlobal(searchGlobal.value, 'contains')"
+        placeholder="Cerca record..."
+        [(ngModel)]="tableParams.globalSearch"
+        (focus)="isInputGlobalFocused = true"
+        (blur)="isInputGlobalFocused = false"
+        [disabled]="loadingUi && !isInputGlobalFocused"
+      />
+    </p-iconField>
+
+    <div class="filterbar-divider"></div>
+
+    <p-calendar
+      selectionMode="range"
+      [iconDisplay]="'input'"
+      [readonlyInput]="true"
+      [showIcon]="true"
+      [showButtonBar]="true"
+      placeholder="Intervallo date"
+      id="daterangeField"
+      [style]="{ width: '270px' }"
+      [inputStyle]="{ width: '270px' }"
+      [ngModel]="tableParams.dateRange"
+      (ngModelChange)="dateRangeChanged($event)"
+      (onShow)="isInputDateFocused = true"
+      (onClose)="isInputDateFocused = false"
+      [disabled]="loadingUi && !isInputDateFocused"
+    />
+
+    <p-selectButton
+      [options]="[
+        { label: 'Start', value: 'start_time' },
+        { label: 'End', value: 'end_time' }
+      ]"
+      [(ngModel)]="tableParams.dateRangeField"
+      optionLabel="label"
+      optionValue="value"
+      [allowEmpty]="false"
+      (onChange)="refreshData()"
+      class="select-button"
+    />
+
+    <div class="filterbar-divider"></div>
+
+    <p-button
+      label="Reset"
+      [outlined]="true"
+      icon="pi pi-filter-slash"
+      (click)="clear()"
+      severity="danger"
+      class="filter-button clear"
+      [disabled]="
+        loadingUi ||
+        (tableParams.sortField == null &&
+          tableParams.globalSearch == '' &&
+          tableParams.dateRange == [])
+      "
+    />
+  </div>
+
+  <p-skeleton
+    width="100%"
+    height="300px"
+    styleClass="shimmer"
+    borderRadius="16px"
+    [class.visible]="loadingUi && !errorUi"
+    id="loader"
+  />
+
+  <p-table
+    #tableRecords
+    [value]="productionData"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    [paginator]="true"
+    [rows]="10"
+    [rowsPerPageOptions]="tableParams.rowsPerPageOptions"
+    sortField="start_time"
+    [sortOrder]="-1"
+    [totalRecords]="tableParams.totalRecords"
+    rowHover="true"
+    responsiveLayout="scroll"
+    id="tableRecords"
+    [class.visible]="!loadingUi && !errorUi && tableParams.totalRecords > 0"
+    [lazy]="true"
+    (onLazyLoad)="customSFP($event)"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th
+          pSortableColumn="log_index"
+          style="width: 5%; min-width: 120px"
+        >
+          Index <p-sortIcon field="log_index" />
+        </th>
+        <th
+          pSortableColumn="job_code"
+          style="width: 10%; min-width: 250px"
+        >
+          Job code <p-sortIcon field="job_code" />
+        </th>
+        <th
+          pSortableColumn="article"
+          style="width: 15%; min-width: 150px"
+        >
+          Article <p-sortIcon field="article" />
+        </th>
+        <th
+          pSortableColumn="barcode"
+          style="width: 15%; min-width: 180px"
+        >
+          Barcode <p-sortIcon field="barcode" />
+        </th>
+        <th
+          pSortableColumn="bar_length"
+          style="width: 5%; min-width: 150px"
+        >
+          Bar length <p-sortIcon field="bar_length" />
+        </th>
+        <th
+          pSortableColumn="length"
+          style="width: 5%; min-width: 150px"
+        >
+          Length <p-sortIcon field="length" />
+        </th>
+        <th
+          pSortableColumn="rest_piece"
+          style="width: 5%; min-width: 120px"
+        >
+          Is rest <p-sortIcon field="rest_piece" />
+        </th>
+        <th
+          pSortableColumn="start_time"
+          style="width: 15%; min-width: 250px"
+        >
+          Start <p-sortIcon field="start_time" />
+        </th>
+        <th
+          pSortableColumn="end_time"
+          style="width: 15%; min-width: 250px"
+        >
+          End <p-sortIcon field="end_time" />
+        </th>
+        <th
+          pSortableColumn="redone"
+          style="width: 5%; min-width: 130px"
+        >
+          Redone <p-sortIcon field="redone" />
+        </th>
+        <th
+          pSortableColumn="completed"
+          style="width: 5%; min-width: 130px"
+        >
+          Compl. <p-sortIcon field="completed" />
+        </th>
+      </tr>
+    </ng-template>
+    <ng-template
+      pTemplate="body"
+      let-record
+    >
+      <tr>
+        <td>
+          {{ !record.log_index || record.log_index.length == 0 ? "--" : record.log_index }}
+        </td>
+        <td>
+          {{ !record.job_code || record.job_code.length == 0 ? "--" : record.job_code }}
+        </td>
+        <td>
+          {{ !record.article || record.article.length == 0 ? "--" : record.article }}
+        </td>
+        <td>
+          {{ !record.barcode || record.barcode.length == 0 ? "--" : record.barcode }}
+        </td>
+        <td>
+          {{ !record.bar_length || record.bar_length.length == 0 ? "--" : record.bar_length }}
+        </td>
+        <td>
+          {{ !record.length || record.length.length == 0 ? "--" : record.length }}
+        </td>
+        <td>
+          <p-tag
+            [severity]="record.rest_piece ? 'success' : 'danger'"
+            [value]="record.rest_piece"
+            [rounded]="true"
+          />
+        </td>
+        <td>
+          {{ !record.start_time || record.start_time.length == 0 ? "--" : ((record.start_time | date : "dd/MM/yyyy HH:mm:ss") || "??") }}
+        </td>
+        <td>
+          {{ !record.end_time || record.end_time.length == 0 ? "--" : ((record.end_time | date : "dd/MM/yyyy HH:mm:ss") || "??") }}
+        </td>
+        <td>
+          <p-tag
+            [severity]="record.redone ? 'success' : 'danger'"
+            [value]="record.redone"
+            [rounded]="true"
+          />
+        </td>
+        <td>
+          <p-tag
+            [severity]="record.completed ? 'success' : 'danger'"
+            [value]="record.completed"
+            [rounded]="true"
+          />
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <div
+    class="error-container"
+    [class.visible]="errorUi"
+  >
+    <ng-lottie
+      [options]="{ path: 'assets/lotties/error.json' }"
+      width="180px"
+      height="180px"
+    ></ng-lottie>
+    <p>
+      Si è verificato un problema<br />
+      <span class="description">
+        Prova ad aggiornare i dati o la pagina
+      </span>
+    </p>
+  </div>
+
+  <div
+    class="error-container"
+    [class.visible]="tableParams.totalRecords == 0 && !errorUi && !loading"
+  >
+    <ng-lottie
+      [options]="{ path: 'assets/lotties/empty.json' }"
+      width="180px"
+      height="180px"
+    ></ng-lottie>
+    <p>
+      Nessun risultato<br />
+      <span class="description">
+        Prova a cambiare i parametri di ricerca o aggiorna i dati
+      </span>
+    </p>
+  </div>
+</div>
+
+<p-dialog
+  header="Sincronizzazione dati"
+  [modal]="true"
+  [visible]="synching"
+  [style]="{ width: '25rem' }"
+  [draggable]="false"
+  [resizable]="false"
+  [modal]="true"
+  [closeOnEscape]="false"
+  [closable]="false"
+  [blockScroll]="true"
+  appendTo="body"
+  position="center"
+>
+  <span class="p-text-secondary">Ci vorrà qualche secondo...</span>
+  <p-progressBar
+    [mode]="syncProgress == -1 ? 'indeterminate' : 'determinate'"
+    [value]="syncProgress"
+    [style]="{ margin: '1.5rem 0 0.8rem'}"
+  />
+</p-dialog>

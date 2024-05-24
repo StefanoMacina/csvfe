@@ -1,0 +1,124 @@
+@import "../../styles/colors.scss";
+
+:host {
+  height: 100%;
+}
+
+.sidebar {
+  height: 100%;
+  position: sticky;
+  width: 80px;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1.1rem;
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
+  z-index: 100;
+
+  .logo-image {
+    width: 50px;
+    min-width: 50px;
+    height: 50px;
+    min-height: 50px;
+    object-fit: contain;
+    cursor: default;
+    border-radius: 35% 35% 35% 35% / 35% 35% 35% 35%;
+  }
+
+  .items-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.7rem;
+    padding: 1rem 0;
+  }
+  .item-nav {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    width: fit-content;
+    min-width: 50px;
+    height: 50px;
+    min-height: 50px;
+    border-radius: 35% 35% 35% 35% / 35% 35% 35% 35%;
+    background-color: #f1f1f1;
+    cursor: pointer;
+    transition: background-color 0.25s ease-in-out, border-radius;
+    text-decoration: none;
+
+    i {
+      color: #888888;
+      transition: color 0.25s ease-in-out;
+      width: 50px;
+      text-align: center;
+      font-size: 1.1rem;
+      line-height: 1.1rem;
+    }
+
+    &.prof-img {
+      background-color: transparent;
+      // border: 1px solid #dadada;
+    }
+    .profile-image {
+      object-fit: contain;
+      width: 50px;
+      min-width: 50px;
+      height: 50px;
+      min-height: 50px;
+      border-radius: 35% 35% 35% 35% / 35% 35% 35% 35%;
+    }
+
+    .item-label {
+      position: absolute;
+      top: auto;
+      bottom: auto;
+      right: 0;
+      transform: translateX(70%);
+      opacity: 0;
+      text-align: center;
+      margin: 0;
+      border-radius: 0.5rem;
+      background-color: #888888;
+      padding: 0.3rem 0.6rem;
+      color: white;
+      transition: transform 0.25s ease-in-out, opacity 0.25s ease-in-out;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    &:hover {
+      background-color: $primarylux;
+      i {
+        color: $primary;
+      }
+      .item-label {
+        transform: translateX(calc(100% + 7px));
+        opacity: 1;
+        pointer-events: all;
+        &::before {
+          content: "";
+          position: absolute;
+          left: -7px;
+          top: 50%;
+          height: 50px;
+          width: 7px;
+          transform: translateY(-50%);
+          background-color: transparent;
+        }
+      }
+    }
+
+    &.active {
+      background-color: $primary;
+      i {
+        color: white;
+      }
+    }
+  }
+}

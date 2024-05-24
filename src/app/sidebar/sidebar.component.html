@@ -1,0 +1,26 @@
+<div class="sidebar noselect">
+  <img class="logo-image" src="/assets/logo.png" alt="Logo" />
+  <div class="items-container">
+    <a
+      class="item-nav"
+      routerLink="/produzione"
+      [routerLinkActive]="['active']"
+    >
+      <i class="fa-solid fa-industry"></i>
+      <p class="item-label">Produzione</p>
+    </a>
+
+    <a class="item-nav" routerLink="/errori" [routerLinkActive]="['active']">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <p class="item-label">Errori</p>
+    </a>
+  </div>
+  <!-- <div class="item-nav prof-img">
+    <img
+      class="profile-image"
+      src="assets/avatar.png"
+      alt="Immagine profilo"
+    />
+    <p class="item-label">Logout</p>
+  </div> -->
+</div>

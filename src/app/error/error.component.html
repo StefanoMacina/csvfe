@@ -1,0 +1,208 @@
+<div class="toprow">
+  <p-button
+    icon="pi pi-cloud-download"
+    [rounded]="true"
+    title="Sincronizza dati"
+    (click)="syncData()"
+    [disabled]="loadingUi"
+  />
+  <p class="head-label">Errori/allarmi</p>
+</div>
+<p-toast styleClass="custom-toast" />
+
+<div class="panel">
+  <div class="filters-row">
+    <p-button
+      label="Aggiorna"
+      [outlined]="true"
+      [icon]="loadingUi ? 'pi pi-spin pi-sync' : 'pi pi-refresh'"
+      (click)="refreshData()"
+      severity="primary"
+      class="filter-button"
+      [disabled]="loadingUi"
+    />
+
+    <div class="filterbar-divider"></div>
+
+    <p-iconField
+      iconPosition="left"
+      id="searchField"
+    >
+      <p-inputIcon styleClass="pi pi-search" />
+      <input
+        pInputText
+        #searchGlobal
+        type="text"
+        (keyup)="tableAlarms.filterGlobal(searchGlobal.value, 'contains')"
+        placeholder="Cerca record..."
+        [(ngModel)]="tableParams.globalSearch"
+        (focus)="isInputGlobalFocused = true"
+        (blur)="isInputGlobalFocused = false"
+        [disabled]="loadingUi && !isInputGlobalFocused"
+      />
+    </p-iconField>
+
+    <div class="filterbar-divider"></div>
+
+    <p-calendar
+      selectionMode="range"
+      [iconDisplay]="'input'"
+      [readonlyInput]="true"
+      [showIcon]="true"
+      [showButtonBar]="true"
+      placeholder="Intervallo date"
+      id="daterangeField"
+      [style]="{ width: '270px' }"
+      [inputStyle]="{ width: '270px' }"
+      [ngModel]="tableParams.dateRange"
+      (ngModelChange)="dateRangeChanged($event)"
+      (onShow)="isInputDateFocused = true"
+      (onClose)="isInputDateFocused = false"
+      [disabled]="loadingUi && !isInputDateFocused"
+    />
+
+    <div class="filterbar-divider"></div>
+
+    <p-button
+      label="Reset"
+      [outlined]="true"
+      icon="pi pi-filter-slash"
+      (click)="clear()"
+      severity="danger"
+      class="filter-button"
+      [disabled]="
+        loadingUi ||
+        (tableParams.sortField == null &&
+          tableParams.globalSearch == '' &&
+          tableParams.dateRange == [])
+      "
+    />
+  </div>
+
+  <p-skeleton
+    width="100%"
+    height="300px"
+    styleClass="shimmer"
+    borderRadius="16px"
+    [class.visible]="loadingUi && !errorUi"
+    id="loader"
+  />
+
+  <p-table
+    #tableAlarms
+    [value]="alarmData"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    [paginator]="true"
+    [rows]="10"
+    [rowsPerPageOptions]="tableParams.rowsPerPageOptions"
+    sortField="date"
+    [sortOrder]="-1"
+    [totalRecords]="tableParams.totalRecords"
+    rowHover="true"
+    responsiveLayout="scroll"
+    id="tableAlarms"
+    [class.visible]="!loadingUi && !errorUi && tableParams.totalRecords > 0"
+    [lazy]="true"
+    (onLazyLoad)="customSFP($event)"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th
+          pSortableColumn="code"
+          style="width: 10%; min-width: 120px"
+        >
+          Code <p-sortIcon field="code" />
+        </th>
+        <th
+          pSortableColumn="description"
+          style="width: 55%; min-width: 300px"
+        >
+          Description <p-sortIcon field="description" />
+        </th>
+        <th
+          pSortableColumn="state"
+          style="width: 10%; min-width: 120px"
+        >
+          State <p-sortIcon field="state" />
+        </th>
+        <th
+          pSortableColumn="date"
+          style="width: 25%; min-width: 200px"
+        >
+          Data <p-sortIcon field="date" />
+        </th>
+      </tr>
+    </ng-template>
+    <ng-template
+      pTemplate="body"
+      let-record
+    >
+      <tr>
+        <td>
+          {{ !record.code || record.code.length == 0 ? "--" : record.code }}
+        </td>
+        <td>
+          {{ !record.description || record.description.length == 0 ? "--" : record.description }}
+        </td>
+        <td>
+          {{ !record.state || record.state.length == 0 ? "--" : record.state }}
+        </td>
+        <td>
+          {{ !record.date || record.date.length == 0 ? "--" : ((record.date | date : "dd/MM/yyyy HH:mm:ss") || '??') }}
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <div
+    class="error-container"
+    [class.visible]="errorUi"
+  >
+    <ng-lottie
+      [options]="{ path: 'assets/lotties/error.json' }"
+      width="180px"
+      height="180px"
+    ></ng-lottie>
+    <p>
+      Si è verificato un problema<br />
+      <span class="description">Prova ad aggiornare i dati o la pagina</span>
+    </p>
+  </div>
+
+  <div
+    class="error-container"
+    [class.visible]="tableParams.totalRecords == 0 && !errorUi && !loading"
+  >
+    <ng-lottie
+      [options]="{ path: 'assets/lotties/empty.json' }"
+      width="180px"
+      height="180px"
+    ></ng-lottie>
+    <p>
+      Nessun risultato<br />
+      <span class="description">Prova a cambiare i parametri di ricerca o aggiorna i dati</span>
+    </p>
+  </div>
+</div>
+
+<p-dialog
+  header="Sincronizzazione dati"
+  [modal]="true"
+  [visible]="synching"
+  [style]="{ width: '25rem' }"
+  [draggable]="false"
+  [resizable]="false"
+  [modal]="true"
+  [closeOnEscape]="false"
+  [closable]="false"
+  [blockScroll]="true"
+  appendTo="body"
+  position="center"
+>
+  <span class="p-text-secondary">Ci vorrà qualche secondo...</span>
+  <p-progressBar
+    [mode]="syncProgress == -1 ? 'indeterminate' : 'determinate'"
+    [value]="syncProgress"
+    [style]="{ margin: '1.5rem 0 0.8rem'}"
+  />
+</p-dialog>
